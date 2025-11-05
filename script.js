@@ -12,10 +12,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let placingIndex = 0, placingHorizontal = true;
   let gameStarted = false;
 
-  // AI state (hunt & target)
-  const tried = new Set();     // "r,c" for shots at player
-  let targetQueue = [];        // cells to try next (neighbors)
-  let lastHit = null;          // last hit coordinate {r,c}
+  // AI state
+  const tried = new Set();
+  let targetQueue = [];
+  let lastHit = null;
 
   // DOM
   const playerDiv = document.getElementById("player-board");
@@ -33,25 +33,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalText  = document.getElementById("modal-text");
   const modalBtn   = document.getElementById("modal-btn");
 
-const params = new URLSearchParams(window.location.search);
-const mode = params.get("mode"); // "manual" atau "random"
+  // Mode via query ?mode=manual|random
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get("mode");
+  if (mode === "manual") startGame(false);
+  else if (mode === "random") startGame(true);
 
-// Jika mode valid, jalankan otomatis
-if (mode === "manual") {
-  startGame(false); // manual
-} else if (mode === "random") {
-  startGame(true);  // random
-}
-
-  // Sounds (put your files alongside)
+  // Sounds
   const hitSound   = new Audio("hit.wav");
   const missSound  = new Audio("miss.wav");
   const placeSound = new Audio("place.wav");
   [hitSound, missSound, placeSound].forEach(a=>a.load());
 
   /* ========== Helpers ========== */
-  function key(r,c){ return `${r},${c}` }
-  function initBoard(){ return Array.from({length:N},()=>Array(N).fill(" ")) }
+  function key(r,c){ return `${r},${c}`; }
+  function initBoard(){ return Array.from({length:N},()=>Array(N).fill(" ")); }
 
   function renderBoard(board, div, clickable=false, handler=null, hoverHandler=null){
     div.innerHTML="";
@@ -109,7 +105,10 @@ if (mode === "manual") {
     }
   }
 
-  function allSunk(board){ for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(board[r][c]==="S") return false; return true; }
+  function allSunk(board){
+    for(let r=0;r<N;r++) for(let c=0;c<N;c++) if(board[r][c]==="S") return false;
+    return true;
+  }
 
   /* ========== Fleet UI ========== */
   function renderFleetUI(container, shipsArr, maskUnknown=false){
@@ -135,7 +134,7 @@ if (mode === "manual") {
 
   function updateFleetBars(){
     renderFleetUI(playerFleetDiv, playerShips, false);
-    renderFleetUI(enemyFleetDiv,  enemyShips,  true); // maskUnknown=true: hanya update saat kita hit
+    renderFleetUI(enemyFleetDiv,  enemyShips,  true);
   }
 
   /* ========== Placement (Manual) ========== */
@@ -150,17 +149,38 @@ if (mode === "manual") {
     }
   }
 
+  // >>> Revisi utama: dua tombol arah Horizontal/Vertical
+  function renderPlacementUI(){
+    const ship = SHIPS[placingIndex];
+    statusDiv.innerHTML = `
+      Place your <b>${ship.name}</b> (length ${ship.size})<br>
+      <div class="dir-buttons">
+        <button id="btn-horizontal" class="dir-btn ${placingHorizontal ? 'active' : ''}">Horizontal</button>
+        <button id="btn-vertical" class="dir-btn ${!placingHorizontal ? 'active' : ''}">Vertical</button>
+      </div>
+    `;
+
+    const btnH = document.getElementById("btn-horizontal");
+    const btnV = document.getElementById("btn-vertical");
+
+    btnH.onclick = () => {
+      placingHorizontal = true;
+      btnH.classList.add("active");
+      btnV.classList.remove("active");
+    };
+
+    btnV.onclick = () => {
+      placingHorizontal = false;
+      btnV.classList.add("active");
+      btnH.classList.remove("active");
+    };
+
+    renderBoard(playerBoard, playerDiv, true, handleManualPlace, previewShip);
+  }
+
   function startManualPlacement(){
     placingIndex=0; placingHorizontal=true; gameStarted=false;
-    // clear previews
-    playerDiv.querySelectorAll(".cell.preview").forEach(n=>n.classList.remove("preview"));
-    statusDiv.innerHTML = `Place your <b>${SHIPS[placingIndex].name}</b> (length ${SHIPS[placingIndex].size})<br>
-      Direction: <b>${placingHorizontal?"Horizontal":"Vertical"}</b><br>
-      <button id="toggle-dir">Toggle Direction</button>`;
-    document.getElementById("toggle-dir").onclick=()=>{
-      placingHorizontal=!placingHorizontal; startManualPlacement();
-    };
-    renderBoard(playerBoard, playerDiv, true, handleManualPlace, previewShip);
+    renderPlacementUI();
   }
 
   function handleManualPlace(r,c){
@@ -173,14 +193,7 @@ if (mode === "manual") {
     placingIndex++;
     updateFleetBars();
     if(placingIndex < SHIPS.length){
-      statusDiv.innerHTML = `✅ ${meta.name} placed!<br>
-        Place your <b>${SHIPS[placingIndex].name}</b> (length ${SHIPS[placingIndex].size})<br>
-        Direction: <b>${placingHorizontal?"Horizontal":"Vertical"}</b><br>
-        <button id="toggle-dir">Toggle Direction</button>`;
-      document.getElementById("toggle-dir").onclick=()=>{
-        placingHorizontal=!placingHorizontal; startManualPlacement();
-      };
-      renderBoard(playerBoard, playerDiv, true, handleManualPlace, previewShip);
+      renderPlacementUI();
     }else{
       statusDiv.textContent="✅ All ships placed! Battle begins!";
       startGameAfterPlacement();
@@ -202,9 +215,7 @@ if (mode === "manual") {
   }
 
   function handlePlayerShoot(r,c){
-    if(enemyView[r][c] !== " ") return; // already shot this cell
-
-    // "thinking" status for UX
+    if(enemyView[r][c] !== " ") return;
     turnDiv.textContent="Your Turn 🔵";
 
     if(enemyBoard[r][c] === "S"){
@@ -231,13 +242,12 @@ if (mode === "manual") {
       return;
     }
 
-    // AI move
     turnDiv.textContent="Enemy's Turn 🔴";
     statusDiv.textContent = "💭 Computer thinking...";
     setTimeout(computerShoot, 800);
   }
 
-  /* ========== AI: Hunt & Target ========== */
+  /* ========== AI Logic ========== */
   function neighbors(r,c){
     const out=[];
     if(r>0) out.push({r:r-1,c});
@@ -248,12 +258,10 @@ if (mode === "manual") {
   }
 
   function pickAiShot(){
-    // If we have targetQueue, prefer it
     while(targetQueue.length){
       const {r,c}=targetQueue.shift();
       if(!tried.has(key(r,c))) return {r,c};
     }
-    // Otherwise hunt randomly untried
     let r,c,safety=0;
     do{
       r=Math.floor(Math.random()*N);
@@ -268,7 +276,6 @@ if (mode === "manual") {
     const {r,c} = pickAiShot();
     tried.add(key(r,c));
 
-    // highlight last shot cell briefly
     const idx=r*N+c;
     const cells=playerDiv.querySelectorAll(".cell");
     const tile=cells[idx];
@@ -279,13 +286,10 @@ if (mode === "manual") {
       const ship = markShipHit(playerShips, r,c);
       if(ship && ship.sunk){
         statusDiv.textContent = `💥 Computer sank your ${ship.name}!`;
-        // clear target mode once sunk
         lastHit=null; targetQueue=[];
       }else{
         statusDiv.textContent = `💥 Computer hit at ${String.fromCharCode(65+r)}${c+1}!`;
-        // push neighbors to queue, prioritize line if lastHit exists
         const nbs=neighbors(r,c).filter(p=>!tried.has(key(p.r,p.c)));
-        // simple prioritization: if lastHit in same row/col, put inline neighbors first
         if(lastHit && (lastHit.r===r || lastHit.c===c)){
           const inline=nbs.filter(p=>p.r===r || p.c===c);
           const other =nbs.filter(p=>!(p.r===r || p.c===c));
@@ -322,7 +326,6 @@ if (mode === "manual") {
 
   /* ========== Start Flow ========== */
   function startGameAfterPlacement(){
-    // enemy ships
     enemyBoard=initBoard(); enemyShips=[];
     randomPlaceAll(enemyBoard, enemyShips);
 
@@ -336,9 +339,13 @@ if (mode === "manual") {
   }
 
   function startGame(random=false){
-    // UI transition
+    // transition
     menuDiv.classList.remove("show");
-    setTimeout(()=>{ menuDiv.classList.add("hidden"); gameDiv.classList.remove("hidden"); gameDiv.classList.add("show"); }, 450);
+    setTimeout(()=>{
+      menuDiv.classList.add("hidden");
+      gameDiv.classList.remove("hidden");
+      gameDiv.classList.add("show");
+    },450);
 
     // reset states
     playerBoard=initBoard(); enemyBoard=initBoard(); enemyView=initBoard();
@@ -346,7 +353,6 @@ if (mode === "manual") {
     placingIndex=0; placingHorizontal=true; gameStarted=false;
     tried.clear(); targetQueue=[]; lastHit=null;
 
-    // place fleets
     if(random){
       randomPlaceAll(playerBoard, playerShips);
       randomPlaceAll(enemyBoard,  enemyShips);
@@ -356,7 +362,6 @@ if (mode === "manual") {
       statusDiv.textContent="Ships placed randomly. Ready to fire!";
       gameStarted=true; turnDiv.textContent="Your Turn 🔵";
     }else{
-      // enemy placed, player manual
       randomPlaceAll(enemyBoard, enemyShips);
       renderBoard(playerBoard, playerDiv);
       updateFleetBars();
@@ -369,7 +374,7 @@ if (mode === "manual") {
   document.getElementById("random").onclick = ()=>startGame(true);
   resetBtn.onclick = ()=>location.reload();
 
-  // Theme toggle (top-right)
+  // Theme toggle
   function syncThemeIcon(){
     themeBtn.textContent = document.body.classList.contains("dark") ? "🌙" : "☀️";
   }
@@ -379,6 +384,4 @@ if (mode === "manual") {
     syncThemeIcon();
   };
   syncThemeIcon();
-
-  // init: just show menu
 });

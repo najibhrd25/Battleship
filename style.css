@@ -170,6 +170,38 @@ button:active { transform:scale(.98); }
   display: none !important;
 }
 
+/* Direction buttons */
+.dir-buttons {
+  margin-top: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.dir-btn {
+  background: var(--navy-2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.95rem;
+  transition: background 0.25s, transform 0.05s;
+}
+
+.dir-btn:hover {
+  background: var(--accent);
+}
+
+.dir-btn.active {
+  background: var(--accent);
+  box-shadow: 0 0 6px rgba(59,130,246,0.6);
+}
+
+
+
+
 /* Mobile */
 @media (max-width:740px) {
   #layout { flex-direction:column; align-items:center; gap:26px; }
