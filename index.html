@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Battleship • Naval Command</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="dark">
+
+  <!-- Toggle tema pojok kanan -->
+  <button id="theme" class="theme-toggle" aria-label="Toggle theme">🌙</button>
+
+  <!-- MENU -->
+  <div id="menu" class="fade show">
+    <h1>Battleship ⚓</h1>
+    <p>Choose how to place your ships:</p>
+    <div class="menu-actions">
+      <button id="manual">Manual Placement</button>
+      <button id="random">Random Placement</button>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" class="hidden fade">
+    <header>
+      <h1>Battleship: Naval Command</h1>
+      <p id="turn">Prepare your fleet...</p>
+    </header>
+
+    <main id="layout">
+      <!-- Player side -->
+      <section class="side">
+        <h2>Your Board</h2>
+        <div class="fleet">
+          <h3>Your Fleet</h3>
+          <div id="player-fleet" class="fleet-list"></div>
+        </div>
+        <div id="player-board" class="board"></div>
+      </section>
+
+      <!-- Enemy side -->
+      <section class="side">
+        <h2>Enemy Board</h2>
+        <div class="fleet">
+          <h3>Enemy Fleet</h3>
+          <div id="enemy-fleet" class="fleet-list"></div>
+        </div>
+        <div id="enemy-board" class="board"></div>
+      </section>
+    </main>
+
+    <footer>
+      <p id="status"></p>
+      <button id="reset">Restart Game</button>
+    </footer>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <h2 id="modal-title"></h2>
+      <p id="modal-text"></p>
+      <button id="modal-btn">Play Again</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

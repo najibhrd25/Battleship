@@ -1,0 +1,182 @@
+/* GLOBAL THEME */
+:root {
+  --navy:#0a192f;
+  --navy-2:#1e3a8a;
+  --accent:#3b82f6;
+  --metal:#64748b;
+  --grid:#1e3a8a;
+  --text:#e2e8f0;
+  --text-dark:#1e293b;
+  --miss:#93c5fd;
+  --hit:#ef4444;
+}
+* { box-sizing:border-box; }
+body {
+  font-family:'Orbitron',sans-serif;
+  margin:0; padding:0;
+  background:var(--navy);
+  color:var(--text);
+  text-align:center;
+  transition:background .6s,color .6s,filter .6s;
+}
+.dark { background:var(--navy); color:var(--text); filter:brightness(1); }
+.light { background:#cbd5e1; color:var(--text-dark); filter:brightness(1.06); }
+.hidden { display:none; }
+
+/* Theme toggle top-right */
+.theme-toggle {
+  position:fixed; top:14px; right:18px;
+  font-size:1.3rem; background:transparent; border:none;
+  color:inherit; cursor:pointer;
+  padding:6px 10px; border-radius:8px;
+  transition:transform .15s, background .3s;
+}
+.theme-toggle:hover { transform:scale(1.15); background:rgba(255,255,255,.08); }
+
+/* Fades */
+.fade { opacity:0; transition:opacity .6s ease; }
+.fade.show { opacity:1; }
+
+/* MENU */
+#menu { margin-top:12vh; }
+#menu h1 { margin:0 0 8px; text-shadow:0 0 10px rgba(59,130,246,.5); }
+/* Tombol umum & menu actions */
+.menu-actions button,
+button {
+  background: var(--navy-2);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 18px;
+  margin: 8px;
+  cursor: pointer;
+  transition: background 0.25s, transform 0.05s;
+  font-family: 'Orbitron', sans-serif; /* ⬅️ Tambahkan ini */
+  font-size: 1rem;                     /* Ukuran font biar pas */
+  letter-spacing: 1px;                 /* Sedikit spasi biar futuristik */
+  text-transform: uppercase;           /* Gaya huruf kapital */
+}
+
+button:hover { background:var(--accent); }
+button:active { transform:scale(.98); }
+
+/* LAYOUT */
+#layout {
+  display:flex; justify-content:center; gap:54px;
+  margin:22px auto; padding:0 16px; max-width:1100px;
+}
+.side { display:flex; flex-direction:column; gap:12px; align-items:center; }
+
+/* Fleet sidebar */
+.fleet { width:280px; max-width:90vw; text-align:left; }
+.fleet h3 { margin:6px 0 8px 2px; font-size:1rem; opacity:.9; }
+.fleet-list { display:flex; flex-direction:column; gap:8px; }
+.ship-row {
+  display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center;
+  padding:6px 8px; border:1px solid rgba(59,130,246,.35); border-radius:8px;
+  background:rgba(255,255,255,.04);
+}
+.ship-row .icon { font-size:18px; }
+.progress {
+  position:relative; height:10px; border-radius:6px; overflow:hidden;
+  background:rgba(148,163,184,.35);
+}
+.progress > span {
+  position:absolute; left:0; top:0; bottom:0; width:0%;
+  background:linear-gradient(90deg, #22c55e, #16a34a);
+  transition:width .25s ease;
+}
+.counter { font-size:.9rem; opacity:.85; }
+
+/* Boards */
+.board {
+  display:grid;
+  grid-template-columns:repeat(7, 45px);
+  grid-template-rows:repeat(7, 45px);
+  gap:4px;
+  padding:12px; border-radius:10px;
+  border:2px solid var(--accent);
+  background:radial-gradient(circle at 50% 40%, rgba(59,130,246,.12) 0%, rgba(10,25,47,.92) 75%);
+  box-shadow:0 0 18px rgba(59,130,246,.28);
+}
+.cell {
+  width:45px; height:45px; cursor:pointer;
+  background:var(--grid); border:1px solid #0f172a;
+  transition:background .15s, transform .06s, outline-color .3s;
+}
+.cell:hover { background:#2563eb; transform:scale(1.03); }
+
+/* Player ships — SVG flat icon overlay */
+#player-board .cell.ship {
+  background:linear-gradient(180deg, #475569, #334155);
+  position:relative;
+}
+#player-board .cell.ship::after {
+  content:"";
+  position:absolute; inset:8px 10px;
+  background:
+    url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="%23cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14h18l-2 3H5l-2-3Z"/><path d="M7 14V9l5-3 5 3v5"/></svg>')
+    no-repeat center / 18px 18px;
+  opacity:.9;
+}
+
+/* Hits / Miss */
+.cell.hit { background:var(--hit); animation:blinkHit .5s ease; }
+.cell.miss { background:var(--miss); position:relative; overflow:hidden; }
+.cell.miss::after {
+  content:""; position:absolute; width:12px; height:12px; top:16px; left:16px;
+  border-radius:50%; background:rgba(173,216,230,.95); animation:bubble .6s ease-out forwards;
+}
+.cell.miss::before {
+  content:""; position:absolute; inset:6px; border-radius:50%;
+  border:2px solid rgba(147,197,253,.35); animation:ripple .8s ease-out forwards;
+}
+
+/* Active target (AI last shot) */
+.active-shot { outline:2px solid #fde047; animation:blink .6s ease; }
+
+/* Animations */
+@keyframes blinkHit {0%,100%{background:var(--hit)}50%{background:#ff8080}}
+@keyframes bubble {0%{transform:scale(.5);opacity:1;top:18px}60%{transform:scale(1.8);opacity:.7}100%{transform:scale(2.4);opacity:0;top:-8px}}
+@keyframes ripple {0%{transform:scale(.5);opacity:.6}100%{transform:scale(2);opacity:0}}
+@keyframes blink {0%,100%{outline-color:transparent}50%{outline-color:#fde047}}
+
+/* Status / Turn */
+#status { min-height:28px; margin:10px 0 0; font-size:1.05rem; }
+#turn { font-size:1.15rem; margin-top:6px; }
+
+/* Modal */
+.modal {
+  position:fixed; inset:0; background:rgba(0,0,0,.45);
+  display:flex; align-items:center; justify-content:center;
+  animation:fadeIn .3s ease;
+}
+.modal-card {
+  background:rgba(10, 25, 47, 0.85);
+  border:1px solid rgba(59,130,246,.4);
+  padding:22px; width:min(92vw, 420px);
+  border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+  backdrop-filter: blur(6px);
+  animation:pop .35s ease;
+}
+@keyframes pop { from{transform:scale(.92);opacity:.5} to{transform:scale(1);opacity:1} }
+@keyframes fadeIn { from {opacity:0;} to {opacity:1;} }
+.modal-card h2 { margin:6px 0 8px; }
+.modal-card p { opacity:.9; margin:0 0 12px; }
+
+/* Force modal hidden off-screen */
+.modal.hidden {
+  display: none !important;
+}
+
+/* Mobile */
+@media (max-width:740px) {
+  #layout { flex-direction:column; align-items:center; gap:26px; }
+  .board {
+    grid-template-columns:repeat(7, 36px);
+    grid-template-rows:repeat(7, 36px);
+  }
+  .cell { width:36px; height:36px; }
+  .fleet { width:92%; }
+}
